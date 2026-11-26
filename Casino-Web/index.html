@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEST – Casino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --line: #2a313c;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f5b700;
+    --win: #3fb950;
+    --lose: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  .test-banner {
+    background: var(--accent);
+    color: #000;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    padding: 6px 10px;
+    letter-spacing: 1px;
+    font-size: 13px;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin: 12px 0 4px;
+    font-size: 28px;
+  }
+  .version { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 12px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .konto {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .konto span:first-child { color: var(--muted); }
+  #guthaben {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px; font-weight: 700; color: var(--accent);
+  }
+  label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 150px; }
+  .euro-feld { position: relative; }
+  .euro-feld input {
+    width: 100%;
+    padding: 12px 36px 12px 12px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 18px;
+  }
+  .euro-feld::after {
+    content: '€';
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 18px;
+    pointer-events: none;
+  }
+  .versuche { display: flex; gap: 8px; }
+  .versuche button {
+    flex: 1; padding: 12px 0;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 18px; cursor: pointer;
+  }
+  .versuche button.aktiv { border-color: var(--accent); color: var(--accent); }
+  #drehen {
+    width: 100%; margin-top: 16px; padding: 16px;
+    background: var(--accent); color: #000; border: 0; border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; cursor: pointer;
+  }
+  #drehen:disabled { opacity: .5; cursor: not-allowed; }
+  .tabelle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .spalte {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 6px; text-align: center; transition: opacity .2s, border-color .2s;
+  }
+  .spalte.aus { opacity: .25; }
+  .spalte.gewonnen { border-color: var(--win); box-shadow: 0 0 12px rgba(63,185,80,.35); }
+  .spalte h3 {
+    margin: 0 0 6px; font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; color: var(--muted); font-weight: 500;
+  }
+  .symbol {
+    font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700;
+    height: 48px; line-height: 48px;
+  }
+  #meldung {
+    text-align: center; font-family: 'Space Grotesk', sans-serif;
+    font-size: 30px; font-weight: 700; margin-top: 16px; min-height: 40px;
+  }
+  #meldung.win { color: var(--win); }
+  #meldung.lose { color: var(--lose); }
+  #hinweis { text-align: center; color: var(--muted); font-size: 14px; min-height: 20px; margin-top: 6px; }
+  #hinweis.fehler { color: var(--lose); }
+  #neustart {
+    display: none; width: 100%; margin-top: 12px; padding: 14px;
+    background: transparent; color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif; font-size: 16px; cursor: pointer;
+  }
+  .regeln { color: var(--muted); font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="test-banner">TEST-VERSION – nicht veröffentlicht</div>
+
+<main>
+  <h1>🎰 Casino</h1>
+  <div class="version" id="version"></div>
+
+  <div class="card konto">
+    <span>Konto</span>
+    <span id="guthaben">500 €</span>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="einsatz">Einsatz</label>
+        <div class="euro-feld">
+          <input id="einsatz" type="text" inputmode="decimal" value="10" autocomplete="off">
+        </div>
+      </div>
+      <div>
+        <label>Versuche</label>
+        <div class="versuche" id="versuche">
+          <button data-v="1" class="aktiv">1</button>
+          <button data-v="2">2</button>
+          <button data-v="3">3</button>
+        </div>
+      </div>
+    </div>
+    <button id="drehen">Drehen</button>
+    <div id="hinweis"></div>
+  </div>
+
+  <div class="card">
+    <div class="tabelle" id="tabelle"></div>
+    <div id="meldung"></div>
+    <button id="neustart">Neues Spiel (500 €)</button>
+  </div>
+
+  <div class="card regeln">
+    Pro Versuch werden 3 Symbole (<b>*</b> <b>~</b> <b>#</b> <b>x</b>) gewürfelt.
+    Sind alle drei gleich, ist der Versuch gewonnen. Ist mindestens ein Versuch gewonnen,
+    bekommst du das Doppelte deines Einsatzes zurück, sonst ist der Einsatz weg.
+  </div>
+</main>
+
+<script>
+  // ---------- Einstellungen ----------
+  const VERSION = '0.1.0-test';
+  const START_GUTHABEN = 500;
+  const GEWINN_FAKTOR = 2;          // Auszahlung = Einsatz * Faktor
+  const X_GEWINNT = false;          // true: drei 'x' zählen auch als Gewinn
+  const SYMBOLE = ['x', '*', '~', '#'];   // Index = Zufallszahl 0..3 (wie rng.Next(0, 4))
+
+  // ---------- Zustand ----------
+  let guthaben = START_GUTHABEN;
+  let versuche = 1;
+  let laeuft = false;
+
+  // ---------- Elemente ----------
+  const elGuthaben = document.getElementById('guthaben');
+  const elEinsatz = document.getElementById('einsatz');
+  const elDrehen = document.getElementById('drehen');
+  const elTabelle = document.getElementById('tabelle');
+  const elMeldung = document.getElementById('meldung');
+  const elHinweis = document.getElementById('hinweis');
+  const elNeustart = document.getElementById('neustart');
+  const elVersion = document.getElementById('version');
+
+  elVersion.textContent = 'Version ' + VERSION;
+
+  // ---------- Tabelle aufbauen ----------
+  for (let v = 0; v < 3; v++) {
+    const spalte = document.createElement('div');
+    spalte.className = 'spalte';
+    spalte.id = 'spalte' + v;
+    spalte.innerHTML = '<h3>Versuch ' + (v + 1) + '</h3>' +
+      '<div class="symbol">-</div><div class="symbol">-</div><div class="symbol">-</div>';
+    elTabelle.appendChild(spalte);
+  }
+
+  function zeigeAktiveSpalten() {
+    for (let v = 0; v < 3; v++) {
+      document.getElementById('spalte' + v).classList.toggle('aus', v >= versuche);
+    }
+  }
+
+  function aktualisiereKonto() {
+    elGuthaben.textContent = guthaben.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' €';
+  }
+
+  function zufallsSymbol() {
+    return SYMBOLE[Math.floor(Math.random() * SYMBOLE.length)];
+  }
+
+  function hinweis(text, fehler) {
+    elHinweis.textContent = text || '';
+    elHinweis.classList.toggle('fehler', !!fehler);
+  }
+
+  // ---------- Versuche wählen ----------
+  document.querySelectorAll('#versuche button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (laeuft) return;
+      versuche = Number(btn.dataset.v);
+      document.querySelectorAll('#versuche button').forEach(function (b) {
+        b.classList.toggle('aktiv', b === btn);
+      });
+      zeigeAktiveSpalten();
+    });
+  });
+
+  // ---------- Drehen ----------
+  elDrehen.addEventListener('click', function () {
+    if (laeuft) return;
+
+    const einsatz = parseFloat(elEinsatz.value.replace(',', '.'));
+    if (isNaN(einsatz) || einsatz <= 0) {
+      hinweis('Ungültiger Einsatz. Bitte eine Zahl größer 0 eingeben.', true);
+      return;
+    }
+    if (einsatz > guthaben) {
+      hinweis('Der Einsatz ist höher als dein Guthaben.', true);
+      return;
+    }
+
+    hinweis('');
+    elMeldung.textContent = '';
+    elMeldung.className = '';
+    laeuft = true;
+    elDrehen.disabled = true;
+
+    guthaben -= einsatz;            // Einsatz sofort abziehen
+    aktualisiereKonto();
+
+    // Ergebnis vorab würfeln: ergebnis[versuch][zeile]
+    const ergebnis = [];
+    for (let v = 0; v < versuche; v++) {
+      ergebnis.push([zufallsSymbol(), zufallsSymbol(), zufallsSymbol()]);
+    }
+
+    // Walzen-Animation: jede Spalte stoppt etwas später
+    const timer = [];
+    let fertig = 0;
+    for (let v = 0; v < 3; v++) {
+      const spalte = document.getElementById('spalte' + v);
+      spalte.classList.remove('gewonnen');
+      const felder = spalte.querySelectorAll('.symbol');
+      if (v >= versuche) {
+        felder.forEach(function (f) { f.textContent = '-'; });
+        continue;
+      }
+      timer[v] = setInterval(function () {
+        felder.forEach(function (f) { f.textContent = zufallsSymbol(); });
+      }, 70);
+      setTimeout(function () {
+        clearInterval(timer[v]);
+        felder.forEach(function (f, i) { f.textContent = ergebnis[v][i]; });
+        fertig++;
+        if (fertig === versuche) auswerten(ergebnis, einsatz);
+      }, 700 + v * 450);
+    }
+  });
+
+  // ---------- Auswertung ----------
+  function auswerten(ergebnis, einsatz) {
+    let gewonnen = false;
+    for (let v = 0; v < ergebnis.length; v++) {
+      const r = ergebnis[v];
+      const gleich = r[0] === r[1] && r[1] === r[2];
+      if (gleich && (r[0] !== 'x' || X_GEWINNT)) {
+        gewonnen = true;
+        document.getElementById('spalte' + v).classList.add('gewonnen');
+      }
+    }
+
+    if (gewonnen) {
+      guthaben += einsatz * GEWINN_FAKTOR;
+      elMeldung.textContent = 'JACKPOT!';
+      elMeldung.className = 'win';
+    } else {
+      elMeldung.textContent = 'LOSER';
+      elMeldung.className = 'lose';
+    }
+    aktualisiereKonto();
+
+    laeuft = false;
+    if (guthaben <= 0) {
+      hinweis('Leider reicht das Guthaben nicht mehr.', true);
+      elNeustart.style.display = 'block';
+    } else {
+      elDrehen.disabled = false;
+    }
+  }
+
+  // ---------- Neustart ----------
+  elNeustart.addEventListener('click', function () {
+    guthaben = START_GUTHABEN;
+    aktualisiereKonto();
+    elNeustart.style.display = 'none';
+    elDrehen.disabled = false;
+    elMeldung.textContent = '';
+    hinweis('');
+    document.querySelectorAll('.symbol').forEach(function (f) { f.textContent = '-'; });
+    document.querySelectorAll('.spalte').forEach(function (s) { s.classList.remove('gewonnen'); });
+  });
+
+  zeigeAktiveSpalten();
+  aktualisiereKonto();
+</script>
+</body>
+</html>
