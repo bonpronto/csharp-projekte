@@ -53,6 +53,6 @@ Das Projekt verbindet drei Technologien miteinander:
 * **Symbole:** `*`, `~`, `#` (Gewinnsymbole) und `x` (Niete).
 * **Gewinn:**
   * **3 gleiche Symbole** (außer `x`): **Jackpot** – Auszahlung `Einsatz × 3,5`
-  * **2 gleiche Symbole** (je nach Modus): Einsatz zurück
+  * **Ist noch nicht verfügbar(2 gleiche Symbole**: Einsatz zurück)
   * **Niete (`x`) / ungültig:** Einsatz verloren
 * Das Spiel läuft, bis das Guthaben auf **0 €** fällt, und startet anschließend eine neue Runde.
