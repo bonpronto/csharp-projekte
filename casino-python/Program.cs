@@ -85,7 +85,7 @@ namespace Casino
             {
 
 
-
+                Console.WriteLine("Version 0.1.0");
                 guthaben = 500;
                 Console.WriteLine(willkommen +
                     "");
